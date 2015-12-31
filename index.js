@@ -11,7 +11,8 @@ module.exports = function (options) {
   var defaultOptions = {
     cwd: '',
     suffix: 'v',
-    fileTypes: ['js', 'css']
+    fileTypes: ['js', 'css'],
+    replaceStrings: null
   };
 
   options = _.merge(defaultOptions, options);
@@ -54,9 +55,16 @@ module.exports = function (options) {
           var src = $asset.attr(attributes.srcAttribute);
 
           if (src && !src.match(/.*(\/\/).*/)) {
-            src = url.parse(src).pathname;
+              var srcReplaced = src;
 
-            var stats = fs.statSync(path.join(options.cwd, src));
+              if (options.replaceStrings && options.replaceStrings.length > 0) {
+                  options.replaceStrings.forEach(function(replaceStruct) {
+                      srcReplaced = srcReplaced.replace(replaceStruct.source, replaceStruct.dest);
+                  });
+              }
+              srcReplaced = url.parse(srcReplaced).pathname;
+
+            var stats = fs.statSync(path.join(options.cwd, srcReplaced));
             $asset.attr(attributes.srcAttribute,  src + '?' + options.suffix + '=' + +stats.mtime);
           }
         }
